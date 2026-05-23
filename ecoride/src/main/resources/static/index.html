@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoRide - Panel de Control & Simulación</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #022c22 100%);
+            --card-bg: rgba(30, 41, 59, 0.4);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-primary: #10b981;
+            --accent-secondary: #059669;
+            --accent-glow: rgba(16, 185, 129, 0.4);
+            --danger: #f43f5e;
+            --danger-glow: rgba(244, 63, 94, 0.3);
+            --warning: #fbbf24;
+            --success: #34d399;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow-x: hidden;
+        }
+
+        header {
+            padding: 2rem 4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--card-border);
+            backdrop-filter: blur(8px);
+        }
+
+        h1, h2, h3 {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .logo span {
+            color: var(--accent-primary);
+        }
+
+        .badge-status {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid var(--accent-primary);
+            color: var(--accent-primary);
+            padding: 0.4rem 1rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badge-status::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-primary);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-primary);
+            animation: pulse 1.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            100% { transform: scale(1.2); opacity: 1; }
+        }
+
+        main {
+            flex-grow: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 2.5rem;
+        }
+
+        @media (max-width: 900px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel-column {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(16px);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.75rem;
+        }
+
+        .grid-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+
+        /* Interactive Selectors */
+        .select-item {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
+            border-radius: 15px;
+            padding: 1.25rem 1rem;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .select-item:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .select-item.active {
+            border-color: var(--accent-primary);
+            background: rgba(16, 185, 129, 0.08);
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .select-item.active::after {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            color: var(--accent-primary);
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .select-item .icon {
+            font-size: 2.2rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .select-item .name {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .select-item .meta {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Battery representation */
+        .battery-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .battery-level {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .battery-high { background: var(--success); }
+        .battery-mid { background: var(--warning); }
+        .battery-low { background: var(--danger); }
+
+        /* Payment Selectors */
+        .payment-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* Button Action */
+        .btn-action {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            width: 100%;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            border: none;
+            color: #fff;
+            padding: 1.25rem 2rem;
+            font-size: 1.15rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+
+        .btn-action:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 25px rgba(16, 185, 129, 0.6);
+        }
+
+        .btn-action:active {
+            transform: scale(0.98);
+        }
+
+        .btn-action:disabled {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* Live Terminal / Result display */
+        .terminal-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .terminal-header {
+            background: #0b0f19;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--card-border);
+            border-bottom: none;
+        }
+
+        .terminal-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .terminal-dots span {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .terminal-dots span:nth-child(1) { background: #ef4444; }
+        .terminal-dots span:nth-child(2) { background: #f59e0b; }
+        .terminal-dots span:nth-child(3) { background: #10b981; }
+
+        .terminal-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .terminal-body {
+            background: #020617;
+            border: 1px solid var(--card-border);
+            border-bottom-left-radius: 15px;
+            border-bottom-right-radius: 15px;
+            padding: 1.5rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            flex-grow: 1;
+            min-height: 250px;
+            max-height: 450px;
+            overflow-y: auto;
+            color: #38bdf8;
+            box-shadow: inset 0 4px 15px rgba(0, 0, 0, 0.8);
+        }
+
+        .console-line {
+            margin-bottom: 0.5rem;
+        }
+
+        .console-prompt {
+            color: var(--accent-primary);
+        }
+
+        .console-success {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .console-error {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        .console-info {
+            color: #e2e8f0;
+        }
+
+        .console-method {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-primary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .console-method-post {
+            background: rgba(56, 189, 248, 0.2);
+            color: #38bdf8;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        /* Footer styling */
+        footer {
+            padding: 2rem;
+            text-align: center;
+            border-top: 1px solid var(--card-border);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            backdrop-filter: blur(8px);
+        }
+
+        footer span {
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            🌿 EcoRide<span>System</span>
+        </div>
+        <div class="badge-status">
+            Servidor Activo (Java 21)
+        </div>
+    </header>
+
+    <main>
+        <!-- Form Control Panel -->
+        <div class="panel-column">
+            <!-- 1. Selection User -->
+            <div class="card">
+                <h3 class="card-title">👤 1. Selecciona un Usuario</h3>
+                <div class="grid-selection" id="users-container">
+                    <div class="select-item active" data-type="user" data-id="1">
+                        <span class="icon">👦</span>
+                        <span class="name">Juan Perez</span>
+                        <span class="meta">Regular (Base completa)</span>
+                    </div>
+                    <div class="select-item" data-type="user" data-id="2">
+                        <span class="icon">👩</span>
+                        <span class="name">Ana Gomez</span>
+                        <span class="meta">Premium (15% Desc)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Selection Vehicle -->
+            <div class="card">
+                <h3 class="card-title">🚲 2. Selecciona un Vehículo</h3>
+                <div class="grid-selection" id="vehicles-container">
+                    <div class="select-item active" data-type="vehicle" data-id="MONO1" data-battery="80">
+                        <span class="icon">🛴</span>
+                        <span class="name">MONO1</span>
+                        <span class="meta">Centro - Bat. 80%</span>
+                        <div class="battery-bar">
+                            <div class="battery-level battery-high" style="width: 80%"></div>
+                        </div>
+                    </div>
+                    <div class="select-item" data-type="vehicle" data-id="BICI1" data-battery="50">
+                        <span class="icon">🚲</span>
+                        <span class="name">BICI1</span>
+                        <span class="meta">Centro - Bat. 50%</span>
+                        <div class="battery-bar">
+                            <div class="battery-level battery-high" style="width: 50%"></div>
+                        </div>
+                    </div>
+                    <div class="select-item" data-type="vehicle" data-id="MONO_BAJO" data-battery="10">
+                        <span class="icon">🛴</span>
+                        <span class="name">MONO_BAJO</span>
+                        <span class="meta">Centro - Bat. 10%</span>
+                        <div class="battery-bar">
+                            <div class="battery-level battery-low" style="width: 10%"></div>
+                        </div>
+                    </div>
+                    <div class="select-item" data-type="vehicle" data-id="BICI2" data-battery="95">
+                        <span class="icon">🚲</span>
+                        <span class="name">BICI2</span>
+                        <span class="meta">Norte - Bat. 95%</span>
+                        <div class="battery-bar">
+                            <div class="battery-level battery-high" style="width: 95%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Payment Method -->
+            <div class="card">
+                <h3 class="card-title">💳 3. Método de Pago</h3>
+                <div class="payment-grid" id="payment-container">
+                    <div class="select-item active" data-type="payment" data-id="TARJETA">
+                        <span class="icon">💳</span>
+                        <span class="name">Tarjeta de Crédito</span>
+                    </div>
+                    <div class="select-item" data-type="payment" data-id="BILLETERA">
+                        <span class="icon">📱</span>
+                        <span class="name">Billetera Virtual</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-action" id="btn-unlock">
+                🔓 Desbloquear y Simular Alquiler
+            </button>
+        </div>
+
+        <!-- Live Logs Console Column -->
+        <div class="panel-column">
+            <div class="card terminal-container">
+                <h3 class="card-title">🖥️ Consola de Respuesta API</h3>
+                
+                <div class="terminal-header">
+                    <div class="terminal-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <div class="terminal-title">HTTP Client Logs</div>
+                </div>
+                
+                <div class="terminal-body" id="console-output">
+                    <div class="console-line">
+                        <span class="console-prompt">&gt;</span> Bienvenido a la consola de simulación EcoRide.
+                    </div>
+                    <div class="console-line">
+                        <span class="console-prompt">&gt;</span> Selecciona los parámetros a la izquierda y presiona el botón para enviar una petición HTTP al backend.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>EcoRide System v2.0 • Desarrollado con 💚 bajo <span>Java 21 & Spring Boot</span></p>
+    </footer>
+
+    <script>
+        // State variables
+        let selectedUserId = "1";
+        let selectedVehicleId = "MONO1";
+        let selectedPaymentMethod = "TARJETA";
+
+        // Setup interaction
+        document.querySelectorAll('.select-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const type = this.getAttribute('data-type');
+                const id = this.getAttribute('data-id');
+
+                // Deselect siblings
+                document.querySelectorAll(`.select-item[data-type="${type}"]`).forEach(el => {
+                    el.classList.remove('active');
+                });
+
+                // Select current
+                this.classList.add('active');
+
+                // Update state
+                if (type === 'user') selectedUserId = id;
+                if (type === 'vehicle') selectedVehicleId = id;
+                if (type === 'payment') selectedPaymentMethod = id;
+            });
+        });
+
+        // Logger helper
+        const consoleOutput = document.getElementById('console-output');
+        
+        function logToConsole(text, type = 'info') {
+            const line = document.createElement('div');
+            line.className = 'console-line';
+            
+            const prompt = document.createElement('span');
+            prompt.className = 'console-prompt';
+            prompt.textContent = '> ';
+            line.appendChild(prompt);
+
+            const content = document.createElement('span');
+            if (type === 'success') {
+                content.className = 'console-success';
+            } else if (type === 'error') {
+                content.className = 'console-error';
+            } else {
+                content.className = 'console-info';
+            }
+            content.innerHTML = text;
+            line.appendChild(content);
+
+            consoleOutput.appendChild(line);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        // Trigger API Call
+        document.getElementById('btn-unlock').addEventListener('click', async function() {
+            this.disabled = true;
+            
+            // Clean console and print request
+            consoleOutput.innerHTML = '';
+            
+            logToConsole('Iniciando desbloqueo de vehículo...', 'info');
+
+            const payload = {
+                idUsuario: selectedUserId,
+                patente: selectedVehicleId,
+                metodoPago: selectedPaymentMethod
+            };
+
+            const urlJson = '/api/alquileres/desbloquear';
+            const urlParams = `/api/alquileres/desbloquear-params?idUsuario=${selectedUserId}&patente=${selectedVehicleId}&metodoPago=${selectedPaymentMethod}`;
+
+            logToConsole(`Enviando petición a la API...`, 'info');
+            logToConsole(`<span class="console-method-post">POST</span> ${urlJson}`, 'info');
+            logToConsole(`Request Payload: ${JSON.stringify(payload, null, 2)}`, 'info');
+
+            try {
+                // Call POST endpoint with body
+                const response = await fetch(urlJson, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    logToConsole(`Respuesta recibida exitosamente! HTTP STATUS: ${response.status}`, 'success');
+                    logToConsole(`Mensaje: ${data.mensaje}`, 'success');
+                    logToConsole(`JSON Completo: ${JSON.stringify(data)}`, 'success');
+                } else {
+                    // Check if it returned error
+                    const errMsg = data.error || data.message || "Error desconocido en el servidor";
+                    logToConsole(`Error del Servidor! HTTP STATUS: ${response.status}`, 'error');
+                    logToConsole(`Detalle: ${errMsg}`, 'error');
+                    if (data.mensaje) logToConsole(`Mensaje: ${data.mensaje}`, 'error');
+                    logToConsole(`JSON Completo: ${JSON.stringify(data)}`, 'error');
+                }
+
+                // Also show how you could test it via GET query params (the user requested to know what to see / test)
+                logToConsole(`---`, 'info');
+                logToConsole(`💡 Tip de Pruebas: También puedes comprobar esta acción vía GET en tu navegador ingresando a:`, 'info');
+                logToConsole(`<span class="console-method">GET</span> <a href="${urlParams}" target="_blank" style="color: #38bdf8; text-decoration: underline;">${urlParams}</a>`, 'info');
+
+            } catch (err) {
+                logToConsole(`Error de red o conexión: ${err.message}`, 'error');
+            } finally {
+                this.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
