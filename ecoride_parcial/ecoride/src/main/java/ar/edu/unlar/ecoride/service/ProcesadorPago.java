@@ -1,5 +1,5 @@
 package ar.edu.unlar.ecoride.service;
 
-public class ProcesadorPago {
-
+public interface ProcesadorPago {
+    void efectuarCobro(double importe);
 }
