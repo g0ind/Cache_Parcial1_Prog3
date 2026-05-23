@@ -68,3 +68,6 @@ Para correr la suite de pruebas unitarias automáticas:
 ```bash
 ./mvnw test
 ```
+Adjuntamos finalmente el diagrama de Clases realizado durante el parcial.
+
+![alt text](<WhatsApp Image 2026-05-23 at 11.13.27.jpeg>)
