@@ -4,8 +4,14 @@ import ar.edu.unlar.ecoride.dto.AlquilerRequestDTO;
 import ar.edu.unlar.ecoride.dto.AlquilerResponseDTO;
 import ar.edu.unlar.ecoride.dto.FinalizarRequestDTO;
 import ar.edu.unlar.ecoride.service.AlquilerService;
+import ar.edu.unlar.ecoride.service.CriterioEstandar;
+import ar.edu.unlar.ecoride.service.CriterioHoraPico;
+import ar.edu.unlar.ecoride.service.CriterioTemporal;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/alquileres")
@@ -17,28 +23,12 @@ public class AlquilerController {
         this.alquilerService = alquilerService;
     }
 
-    @GetMapping("/desbloquear")
+    @PostMapping("/desbloquear")
     public ResponseEntity<AlquilerResponseDTO> desbloquear(@RequestBody AlquilerRequestDTO request) {
         return ResponseEntity.ok(alquilerService.procesarDesbloqueo(
                 request.getIdUsuario(),
                 request.getPatente(),
                 request.getMetodoPago()));
-    }
-
-    @PostMapping("/desbloquear")
-    public ResponseEntity<AlquilerResponseDTO> desbloquearPost(@RequestBody AlquilerRequestDTO request) {
-        return ResponseEntity.ok(alquilerService.procesarDesbloqueo(
-                request.getIdUsuario(),
-                request.getPatente(),
-                request.getMetodoPago()));
-    }
-
-    @GetMapping("/desbloquear-params")
-    public ResponseEntity<AlquilerResponseDTO> desbloquearConParams(
-            @RequestParam String idUsuario,
-            @RequestParam String patente,
-            @RequestParam String metodoPago) {
-        return ResponseEntity.ok(alquilerService.procesarDesbloqueo(idUsuario, patente, metodoPago));
     }
 
     @PostMapping("/finalizar")
@@ -50,12 +40,19 @@ public class AlquilerController {
                 request.getIdUsuario()));
     }
 
-    @GetMapping("/finalizar-params")
-    public ResponseEntity<AlquilerResponseDTO> finalizarConParams(
-            @RequestParam String patente,
-            @RequestParam int minutosTranscurridos,
-            @RequestParam String metodoPago,
-            @RequestParam String idUsuario) {
-        return ResponseEntity.ok(alquilerService.finalizarViaje(patente, minutosTranscurridos, metodoPago, idUsuario));
+    @PostMapping("/tarifa")
+    public ResponseEntity<Map<String, String>> cambiarCriterio(@RequestParam String criterio) {
+        Map<String, String> response = new HashMap<>();
+        if ("HORA_PICO".equalsIgnoreCase(criterio)) {
+            alquilerService.getGestorTarifa().setCriterio(new CriterioHoraPico());
+            response.put("mensaje", "Criterio de facturación cambiado a: Hora Pico (Recargo 40%)");
+        } else if ("TEMPORAL".equalsIgnoreCase(criterio)) {
+            alquilerService.getGestorTarifa().setCriterio(new CriterioTemporal());
+            response.put("mensaje", "Criterio de facturación cambiado a: Temporal Climático (Recargo fijo $150)");
+        } else {
+            alquilerService.getGestorTarifa().setCriterio(new CriterioEstandar());
+            response.put("mensaje", "Criterio de facturación cambiado a: Estándar (Sin recargos)");
+        }
+        return ResponseEntity.ok(response);
     }
 }
